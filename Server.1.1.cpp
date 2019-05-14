@@ -87,6 +87,7 @@ int main(int argc, char* argv[]) {
 		if (ret > 0) {
 			revData[ret] = 0x00;
 			printf(revData);
+			cout << endl;
 		}
 
 		//发送数据  
