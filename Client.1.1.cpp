@@ -33,61 +33,79 @@ linux: 最好设置为MSG_NOSIGNAL, 如果不设置, 在发送出错后有可能
 using namespace std;
 #pragma comment(lib, "ws2_32.lib")//告知编译器链接Ws2_32.lib
 
-int main(){
-	//加载套接字库
+SOCKET sockClient;
+sockaddr_in addrServer;
+
+//加载套接字库
+void loadSocket() {
 	WORD sockVersion = MAKEWORD(2, 2);//指2.2版本的socket
 	WSADATA data;
-	if (WSAStartup(sockVersion, &data) != 0)	{
+	if (WSAStartup(sockVersion, &data) != 0) {
 		/*
 		int WSAStartup(WORD wVersionRequested, LPWSADATA lpWSAData);
 		• 第一个参数, 指明程序请求使用的Socket版本, 高位字节指明副版本, 低位字节指明主版本
 		• 第二个参数, 操作系统利用它, 返回请求的Socket的版本信息
 
-		Windows下, 调用WSAStartup()函数, 绑定对应版本的socket. 
+		Windows下, 调用WSAStartup()函数, 绑定对应版本的socket.
 		以后程序就可以调用所请求的Socket库中的函数了.
 		*/
-		return 0;
+		return;
 	}
+}
+
+//创建套接字
+void createSocket() {
+	sockClient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	/*
+	int socket(int domain, int type, int protocol);
+	• domain, 协议族. 协议族决定了socket的地址类型, 在通信中必须采用对应的地址,
+		AF_INET, 决定了要用32位的ipv4地址与16位的端口号的组合;
+	• type, 指定socket类型;
+	• protocol, 指定协议, IPPROTO_TCP对应TCP传输协议.
+
+	socket()用于创建一个socket描述符, 它唯一标识一个socket.
+	返回的socket描述字存在于协议族（address family，AF_XXX）空间中, 但没有一个具体的地址.
+	若要赋一个地址, 就必须调用bind()函数, 否则就当调用connect()、listen()时系统会自动随机分配一个端口.
+	*/
+	if (sockClient == INVALID_SOCKET) {
+		printf("Invalid Socket!");
+		return;
+	}
+}
+
+//向服务器发出连接请求
+void connectServer(sockaddr_in addr, int host, const char* addrC) {
+	//地址结构根据地址创建socket时的地址协议族的不同而不同
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(host);
+	addr.sin_addr.S_un.S_addr = inet_addr(addrC);
+
+	//向服务器发出连接请求
+	if (connect(sockClient, (sockaddr*)& addr, sizeof(addr)) == SOCKET_ERROR) {
+		/*
+		int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+		• 第一个参数, 为客户端的socket描述字,
+		• 第二个参数, 为服务器的socket地址,
+		• 第三个参数, 为socket地址的长度.
+
+		客户端通过调用connect函数来建立与TCP服务器的连接.
+		*/
+		printf("Connect Error!");
+		closesocket(sockClient);
+		return;
+	}
+}
+
+int main(){
+	//加载套接字库
+	loadSocket();
 
 	while (true) {
 		//创建套接字
-		SOCKET sockClient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		/*
-		int socket(int domain, int type, int protocol);
-		• domain, 协议族. 协议族决定了socket的地址类型, 在通信中必须采用对应的地址, 
-			AF_INET, 决定了要用32位的ipv4地址与16位的端口号的组合;
-		• type, 指定socket类型;
-		• protocol, 指定协议, IPPROTO_TCP对应TCP传输协议.
-
-		socket()用于创建一个socket描述符, 它唯一标识一个socket.
-		返回的socket描述字存在于协议族（address family，AF_XXX）空间中, 但没有一个具体的地址.
-		若要赋一个地址, 就必须调用bind()函数, 否则就当调用connect()、listen()时系统会自动随机分配一个端口.
-		*/
-		if (sockClient == INVALID_SOCKET) {
-			printf("Invalid Socket!");
-			return 0;
-		}
-
-		sockaddr_in addrServer;
-		//地址结构根据地址创建socket时的地址协议族的不同而不同
-		addrServer.sin_family = AF_INET;
-		addrServer.sin_port = htons(8888);
-		addrServer.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+		createSocket();
 
 		//向服务器发出连接请求
-		if (connect(sockClient, (sockaddr*)& addrServer, sizeof(addrServer)) == SOCKET_ERROR) {
-			/*
-			int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-			• 第一个参数, 为客户端的socket描述字, 
-			• 第二个参数, 为服务器的socket地址, 
-			• 第三个参数, 为socket地址的长度.
-
-			客户端通过调用connect函数来建立与TCP服务器的连接.
-			*/
-			printf("Connect Error!");
-			closesocket(sockClient);
-			return 0;
-		}
+		connectServer(addrServer, 8888, "127.0.0.2");
 
 		string data;
 		cin >> data;
