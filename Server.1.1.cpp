@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 	addrClients.sin_port = htons(8888);
 	addrClients.sin_addr.S_un.S_addr = INADDR_ANY;
 	/*
-	socket INADDR_ANY 监听0.0.0.0地址, 
+	socket INADDR_ANY 监听0.0.0.0地址,
 	socket只绑定端口, 只要是往这个端口发送的所有ip都能连上.
 	*/
 	if (bind(sockServer, (LPSOCKADDR)& addrClients, sizeof(addrClients)) == SOCKET_ERROR) {
@@ -50,8 +50,8 @@ int main(int argc, char* argv[]) {
 		int listen(int sockfd, int backlog);
 		• 第一个参数, 为要监听的socket描述字,
 		• 第二个参数, 为相应socket可以排队的最大连接个数.
-		
-		socket()函数创建的socket默认是主动类型的, 
+
+		socket()函数创建的socket默认是主动类型的,
 		listen函数将socket变为被动类型的, 等待客户的连接请求.
 		*/
 		printf("Listen Error!");
@@ -69,17 +69,17 @@ int main(int argc, char* argv[]) {
 		sockClient = accept(sockServer, (SOCKADDR*)& clientAddr, &nAddrlen);
 		/*
 		int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-		• 第一个参数, 为服务器的socket描述字, 
+		• 第一个参数, 为服务器的socket描述字,
 		• 第二个参数, 为指向struct sockaddr *的指针, 用于返回客户端的协议地址
 		• 第三个参数, 为协议地址的长度.
-		
+
 		如果accpet成功, 那么返回由内核自动生成的一个新描述字, 代表与返回客户的TCP连接.
 		*/
 		if (sockClient == INVALID_SOCKET) {
 			printf("Accept Error!");
 			continue;
 		}
-		printf("接受到一个连接：%s \r\n", inet_ntoa(clientAddr.sin_addr));
+		printf("接受到一个连接：%s  %d\r\n", inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port);
 		//inet_ntoa(), 将十进制网络字节序转换为点分十进制IP格式的字符串
 
 		//接收数据  
